@@ -1,6 +1,7 @@
 # 🏀 NBA Draft Combine Intelligence
 
 **[Dashboard](https://nbacombinerapmanalysis.streamlit.app/)**
+<img width="1736" height="962" alt="image" src="https://github.com/user-attachments/assets/59bb4780-3f01-44e8-9e36-f41631caba6d" />
 
 An end-to-end machine learning project exploring whether pre-draft physical measurements predict NBA career success — and why the answer is more complicated than it looks.
 
