@@ -1,0 +1,10 @@
+position,model,mean_r2,std_r2
+Guard,Ridge,-0.0615,0.0523
+Guard,RF,-0.0145,0.0514
+Guard,GBM,-0.2447,0.1994
+Wing,Ridge,-0.0674,0.0921
+Wing,RF,0.1004,0.2945
+Wing,GBM,-0.1404,0.4807
+Big,Ridge,-0.047,0.0424
+Big,RF,-0.0739,0.0939
+Big,GBM,-0.4509,0.4221

@@ -1,0 +1,18 @@
+{
+  "HGT": "Height (in)",
+  "WGT": "Weight (lbs)",
+  "BMI": "BMI",
+  "WNGSPN": "Wingspan (in)",
+  "STNDRCH": "Standing Reach (in)",
+  "HANDL": "Hand Length (in)",
+  "HANDW": "Hand Width (in)",
+  "STNDVERT": "Standing Vertical (in)",
+  "LPVERT": "Max Vertical (in)",
+  "LANE": "Lane Agility (sec)",
+  "SHUTTLE": "Shuttle Run (sec)",
+  "SPRINT": "3/4 Sprint (sec)",
+  "BENCH": "Bench Press (reps)",
+  "wingspan_diff": "Wingspan \u2212 Height",
+  "reach_diff": "Reach \u2212 Height",
+  "vert_diff": "Max \u2212 Standing Vertical"
+}
