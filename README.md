@@ -1,5 +1,7 @@
 # 🏀 NBA Draft Combine Intelligence
 
+**[Dashboard](url)**
+
 An end-to-end machine learning project exploring whether pre-draft physical measurements predict NBA career success — and why the answer is more complicated than it looks.
 
 ---
