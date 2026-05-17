@@ -1,2 +1,184 @@
-# combine_rapm_analysis
-Are any NBA combine measurements accurate reflectors of a players career success (determined using RAPM)
+# 🏀 NBA Draft Combine Intelligence
+
+An end-to-end machine learning project exploring whether pre-draft physical measurements predict NBA career success — and why the answer is more complicated than it looks.
+
+---
+
+## The Question
+
+Every June, draft prospects run sprints, jump, and get measured at the NBA Draft Combine in Chicago. Teams pay close attention. But do these numbers actually predict who becomes a good NBA player?
+
+This project tries to answer that, broken down by position group (Guards / Wings / Bigs), using career on-court impact as the outcome variable.
+
+---
+
+## The Catch: A Participation Problem
+
+Here's the most important context for interpreting any results from this dataset:
+
+**Until 2023, the NBA Draft Combine was voluntary.**
+
+Top prospects routinely skipped it. A player projected to go in the top 5 had no incentive to risk injury or reveal physical limitations — so they didn't show up. This created a severe selection bias: the combine data is systematically missing the players who matter most for building a predictive model.
+
+The players who *did* attend were largely borderline prospects trying to impress teams and secure their draft position. As a result:
+
+- The combine sample skews heavily toward players who had modest or short NBA careers
+- Elite players (the ones that would show a combine → career success relationship most clearly) are disproportionately absent
+- Any model trained on this data will likely underestimate the predictive value of combine measurements under ideal conditions
+
+**The NBA only mandated combine participation starting in 2023**, meaning we have fewer than two full draft classes of data where attendance is truly universal. The signal-to-noise ratio should meaningfully improve as those players build out their careers over the next several years.
+
+This limitation is baked into the analysis and worth keeping in mind when reading the R² values on the Key Insights page.
+
+---
+
+## Data Sources
+
+| Source | Description |
+|---|---|
+| [NBA Draft Combine (Kaggle)](https://www.kaggle.com/datasets/marcusfern/nba-draft-combine) | Physical measurements and athletic testing (2000–2025 draft classes) |
+| [Historical NBA Player Box Scores (Kaggle)](https://www.kaggle.com/datasets/eoinamoore/historical-nba-data-and-player-box-scores) | Per-game statistics and player info for all regular season games |
+
+**Target variable:** Career average +/− per 36 minutes (mean-centred by position group). This is a raw team +/− measure, not a fully adjusted RAPM, so players who spent careers on strong teams will be slightly inflated. It is used here as a practical proxy in the absence of freely available historical RAPM data.
+
+---
+
+## Combine Features Used
+
+| Feature | Description |
+|---|---|
+| `HGT` | Height without shoes (inches) |
+| `WGT` | Weight (lbs) |
+| `BMI` | Body mass index |
+| `WNGSPN` | Wingspan (inches) |
+| `STNDRCH` | Standing reach (inches) |
+| `HANDL` / `HANDW` | Hand length / width (inches) |
+| `STNDVERT` | Standing vertical leap (inches) |
+| `LPVERT` | Max vertical leap (inches) |
+| `LANE` | Lane agility drill time (seconds) |
+| `SHUTTLE` | Shuttle run time (seconds) |
+| `SPRINT` | ¾-court sprint time (seconds) |
+| `BENCH` | Bench press repetitions (185 lbs) |
+| `wingspan_diff` | Wingspan − Height (arm length proxy) |
+| `reach_diff` | Standing reach − Height (arm length proxy) |
+| `vert_diff` | Max vertical − Standing vertical (explosive power proxy) |
+
+---
+
+## Methodology
+
+### Pipeline
+
+```
+Kaggle data → merge on player name → career +/− computation
+→ combine feature cleaning → position grouping
+→ 3 ML models × 3 position groups → feature importance
+→ Streamlit dashboard
+```
+
+### Models
+
+Three regression models are trained per position group (Guard / Wing / Big) and evaluated with 5-fold cross-validation:
+
+- **Ridge Regression** — linear baseline with L2 regularisation
+- **Random Forest** — captures non-linear effects and feature interactions; used for permutation importance
+- **Gradient Boosting** — sequential error-correction, typically highest accuracy
+
+Feature importance is measured via Random Forest **permutation importance** (how much does R² drop when each feature is randomly shuffled?) rather than impurity-based importance, which is less reliable for features with different scales.
+
+### Position Grouping
+
+| Group | Positions |
+|---|---|
+| Guard | PG, SG, G |
+| Wing | SF, F, SF-PF, PF-SF |
+| Big | PF, C, C-PF, PF-C, F-C |
+
+---
+
+## Dashboard
+
+The Streamlit dashboard has three pages:
+
+**Key Insights** — Scatter plot of composite combine score vs career impact, with players categorised as Blueprint Stars (high combine → top career), Combine Misses (elite measurables, underperformed), Hidden Gems (modest combine, overperformed), or Average. Filterable by position group.
+
+**Feature Importance** — Bar charts showing which combine metrics have the strongest predictive relationship with career success, per position group.
+
+**Player Lookup** — Search any player in the dataset by last name. Shows their career +/− hero stat, combine measurements vs position average (with green/red text matching their deviation direction), a deviation bar chart, and a career box score production radar chart vs position average.
+
+### Running Locally
+
+```bash
+git clone https://github.com/YOUR_USERNAME/nba-combine-intelligence
+cd nba-combine-intelligence
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Generate the data (requires Kaggle API credentials)
+jupyter nbconvert --to notebook --execute nba_combine_analysis.ipynb
+
+# Launch the dashboard
+cd dashboard
+streamlit run app.py
+```
+
+> **Kaggle credentials:** You'll need a `kaggle.json` API token in `~/.kaggle/` to download the datasets. Get one at [kaggle.com/account](https://www.kaggle.com/account).
+
+---
+
+## Key Findings
+
+A few patterns worth noting, with the participation caveat in mind:
+
+- **R² values are low across all position groups** (typically −0.05 to +0.15). This is expected given the selection bias — the combine sample is not representative of the full talent distribution.
+- **Physical measurements show stronger signal than athletic testing** for most position groups, suggesting that body profile (wingspan relative to height, hand size) carries more information than drill performance.
+- **Bigs show the weakest predictability** — unsurprising, since skill and feel are harder to capture at the combine for big men, and because dominant college big men are most likely to skip.
+- **Lane agility is consistently among the top features** for guards and wings, suggesting quickness measurements carry real signal even in a biased sample.
+
+These findings should be revisited as post-2023 (mandatory participation) cohorts mature and build out career data.
+
+---
+
+## Project Structure
+
+```
+nba-combine-intelligence/
+├── nba_combine_analysis.ipynb   # Full data pipeline and ML training
+├── requirements.txt
+├── dashboard/
+│   ├── app.py                   # Streamlit dashboard
+│   ├── .streamlit/
+│   │   └── config.toml          # Theme configuration
+│   └── data/                    # Generated by notebook (not tracked in git)
+│       ├── combine_rapm.csv
+│       ├── model_summary.csv
+│       ├── importance_guard.csv
+│       ├── importance_wing.csv
+│       ├── importance_big.csv
+│       ├── feature_labels.json
+│       └── boxscore_per36.csv
+└── README.md
+```
+
+> The `dashboard/data/` folder is generated by running the notebook and is not committed to the repository.
+
+---
+
+## Limitations & Future Work
+
+- **Selection bias** is the dominant limitation — addressed above
+- **Raw +/− as target** is not teammate/opponent adjusted; true RAPM would produce cleaner results
+- **Name-matching joins** between datasets drop players with name inconsistencies (accents, suffixes, different spellings)
+- **Small sample per position group** after all filtering (~150–400 players per group) limits the power of the ML models
+- **Future:** as mandatory combine data accumulates post-2023, re-running this analysis on that cohort alone would give a much cleaner test of whether combine measurements actually predict career success
+
+---
+
+## Built With
+
+Python · Pandas · scikit-learn · Plotly · Streamlit · Kaggle datasets
+
+---
+
+*Built by [Joshua Hey](https://www.linkedin.com/in/joshua-hey-214173279/) · Systems Design Engineering, University of Waterloo*
